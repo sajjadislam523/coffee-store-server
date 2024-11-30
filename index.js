@@ -39,7 +39,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        client.connect();
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
@@ -107,6 +107,18 @@ async function run() {
             const newUser = req.body;
             console.log("Creating new user", newUser);
             const result = await userCollection.insertOne(newUser);
+            res.send(result);
+        })
+
+        app.patch('/users', async (req, res) => {
+            const email = req.body.email;
+            const filter = { email };
+            const updatedDoc = {
+                $set: {
+                    lastLoginTime: req.body?.lastLoginTime
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc);
             res.send(result);
         })
 
