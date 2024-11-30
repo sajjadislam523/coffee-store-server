@@ -22,11 +22,6 @@ app.listen(port, () => {
 
 // basic setup done!
 
-// coffeeMaster
-// zCMWyE2VkqoOcCcY
-
-
-
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.owq8r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -46,7 +41,12 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        const coffeeCollection = client.db('coffeeDB').collection('coffee')
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+        const coffeeCollection = client.db('coffeeDB').collection('coffee');
+        const userCollection = client.db('coffeeDB').collection('users');
 
         app.get('/coffee', async (req, res) => {
             const cursor = coffeeCollection.find();
@@ -95,9 +95,28 @@ async function run() {
             res.send(result);
         })
 
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        app.get('/users', async (req, res) => {
+            const cursor = userCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+
+        // User related API's
+        app.post('/users', async (req, res) => {
+            const newUser = req.body;
+            console.log("Creating new user", newUser);
+            const result = await userCollection.insertOne(newUser);
+            res.send(result);
+        })
+
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        })
+
     } catch (err) {
         console.error("Failed to connect to MongoDB", err);
     }
